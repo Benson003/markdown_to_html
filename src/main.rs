@@ -1,8 +1,10 @@
 mod tokenizer;
 mod cmd;
+mod parser;
 
 use crate::tokenizer::tokenizer::TokenList;
 use crate::cmd::cmd::load_file_from_args;
+use crate::parser::parser;
 
 fn main(){
     let source = load_file_from_args().unwrap();
