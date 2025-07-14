@@ -16,8 +16,26 @@ pub struct ASTNode{
     order: usize,
 }
 
+impl ASTNode {
+    pub fn new(node_type: NodeType, value: NodeValue,parent: Option<ASTNode>) -> ASTNode {
+        ASTNode{
+            node_type:node_type,
+            value: value,
+            parent: parent,
+            children: vec![],
+            order: 1
+        }
+    }
+
+    pub fn append_node(&mut self,ast_node:ASTNode){
+        self.children.append(ast_node);
+        self.order = self.children.len() + 1;
+    }
+}
+
 #[derive(Debug)]
 pub enum NodeType {
+    Root,
     Header,
     Text,
     UniqueID,

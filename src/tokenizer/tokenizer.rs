@@ -7,7 +7,7 @@ use crate::tokenizer::tokens::{ Token, CharType, TokenTypes};
 
 #[derive(Debug)]
 pub struct TokenList {
-    tokens: Vec<Token>,
+    pub tokens: Vec<Token>,
 }
 
 impl  TokenList {

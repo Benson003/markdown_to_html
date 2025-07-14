@@ -10,6 +10,10 @@ impl Token {
             value:value,
         }
     }
+
+    pub fn print_token(&mut self){
+        println!("<Token token_type={0} value={1}",self.token_type,self.value);
+    }
 }
 
 
