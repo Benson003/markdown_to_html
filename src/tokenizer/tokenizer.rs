@@ -1,6 +1,9 @@
-use core::{char, default::Default, fmt, iter::Iterator, option::Option::{None, Some}};
+use core::{char,  iter::{Iterator}, option::Option::Some, str::{Chars, Matches}};
+use std::iter::Peekable;
 
-use crate::tokenizer::tokens::{self, Token, TokenState, TokenTypes};
+use crate::tokenizer::tokens::{ Token, CharType, TokenTypes};
+
+
 
 #[derive(Debug)]
 pub struct TokenList {
@@ -21,95 +24,166 @@ impl  TokenList {
     }
     pub fn tokenize(&mut self,source :&str){
         let mut buffer = String::new();
-        let mut chars =source.chars().peekable();
-        let mut state: TokenState = TokenState::Default;
-        while let Some(&ch)= chars.peek(){
-            match state{
-                TokenState::Default=>{
-                    switch_state(self, &ch, &mut state, &mut buffer, &mut chars);
+        let mut chars = source.chars().peekable();
+        while let Some(&ch) = chars.peek(){
+            match CharType::classify_char(ch){
+                CharType::WhiteSpace =>{
+                    chars.next();
                 }
-                TokenState::Escape=>{
+                CharType::Letter => {
+                buffer.clear();
+                while let Some(&c) = chars.peek(){
+                    match CharType::classify_char(c){
+                        CharType::Letter=>{
+                             buffer.push(c);
+                             chars.next();
+                            }
+                            _=>break
+                        }
+                        }
+                let value = std::mem::take(&mut buffer);
+                self.append_tokens(Token::new(TokenTypes::Text, Some(value)));
+                }
+                CharType::Special =>{
+                      buffer.clear();
+                    while let Some(&c) = chars.peek(){
+                        if CharType::classify_char(c) != CharType::Special{break;}
+                        match c {
+                            '#' =>{
+                                chars.next();
+                                self.append_tokens(Token::new(TokenTypes::Header, None));
+                            }
+                            '[' => {
+                                chars.next();
+                                self.append_tokens(Token::new(TokenTypes::AnchorValueStart, None));
+                            }
+                            ']' => {
+                                chars.next();
+                                self.append_tokens(Token::new(TokenTypes::AnchorValueEnd, None));
+                            }
+                            '(' => {
+                                chars.next();
+                                self.append_tokens(Token::new(TokenTypes::AnchorURLStart, None));
 
+                            }
+                            ')' => {
+                                chars.next();
+                                self.append_tokens(Token::new(TokenTypes::AnchorURLEnd, None));
+
+                            }
+                            '<' => {
+                                chars.next();
+                                self.append_tokens(Token::new(TokenTypes::UniqueIDBegin, None));
+
+                            }
+                            '>' => {
+                                chars.next();
+                                self.append_tokens(Token::new(TokenTypes::UniqueIDEnd, None));
+                            }
+                            '{' => {
+                                chars.next();
+                                self.append_tokens(Token::new(TokenTypes::ClassBegin, None));
+                            }
+                            '}' => {
+                                chars.next();
+                                self.append_tokens(Token::new(TokenTypes::ClassEnd, None));
+                            }
+                            _ => break
+                        }
+                    }
                 }
-                TokenState::Text=>{
+
+                CharType::Digit => {
+                        let mut is_ordered_list = false;
+                        let mut num_str = String::new();
+
+                        while let Some(&c) = chars.peek() {
+                            match c {
+                                '0'..='9' => {
+                                    num_str.push(c);
+                                    chars.next(); // consume digit
+                                }
+                                '.' => {
+                                    let mut check_iter = chars.clone();
+                                    check_iter.next(); // '.'
+                                    if check_iter.next() == Some(' ') && !num_str.is_empty() {
+                                        // Confirm ordered list
+                                        is_ordered_list = true;
+                                        chars.next(); // consume '.'
+                                    } else {
+                                        break; // not an ordered list
+                                    }
+                                }
+                                _ => break,
+                            }
+                        }
+
+                        if is_ordered_list {
+                            self.append_tokens(Token::new(TokenTypes::OrderedList, Some(num_str)));
+                        } else {
+                            self.append_tokens(Token::new(TokenTypes::Text, Some(num_str)));
+                        }
+                    }
+
+
+                CharType::NewLine => {
+                    chars.next();
+                }
+                CharType::Symbol => {
                     buffer.clear();
-                    while let Some(&c)= chars.peek() {
+                while let Some(&c) = chars.peek(){
+                    if CharType::classify_char(c) != CharType::Symbol{break;}
+                    match c {
+                        '!' => {
+                            chars.next();
+                            self.append_tokens(Token::new(TokenTypes::Image, None));
+                        }
+
+                        '*'=>{
+                            chars.next();
+                            self.append_tokens(Token::new(TokenTypes::Emphasis, None));
+                        }
+                        '`'=> {
+                            chars.next();
+                            self.append_tokens(Token::new(TokenTypes::Inline, None));
+                        }
+                        '-'=>{
+                            chars.next();
+                            self.append_tokens(Token::new(TokenTypes::Minus, None));
+                        }
+                        '_'=>{
+                            chars.next();
+                            self.append_tokens(Token::new(TokenTypes::UnderScore, None));
+                        }
+                        _=> {
+                            chars.next();
+                           buffer.push(c);
+                            let value = std::mem::take(&mut buffer);
+                            self.append_tokens(Token::new(TokenTypes::Text, Some(value)));
+                             break;
+                            }
 
 
                     }
 
                 }
-                TokenState::Value=>{
-
                 }
-                TokenState::Header=>{
-
+                CharType::Escape =>{
+                   chars.next();
+                   if let Some(ch) = chars.next(){
+                    buffer.push(ch);
+                    let value = std::mem::take(&mut buffer);
+                    self.append_tokens(Token::new(TokenTypes::Escape, Some(value)));
+                   }
                 }
-                TokenState::Anchor=>{
-
+                CharType::Unknown => {
+                buffer.clear();
+                chars.next();
+                buffer.push(ch);
+                let value = std::mem::take(&mut buffer);
+                self.append_tokens(Token::new(TokenTypes::Error, Some(value)));
                 }
-                TokenState::Inline=> {
-
-                }
-                TokenState::Class=>{
-
-                }
-                TokenState::UniqueID =>{
-
-                }
-                TokenState::List=>{
-
                 }
             }
         }
-
-
     }
-}
-
-
-
-fn manipulate(base_state:&mut TokenState,token_list:&mut TokenList,token:Token,,buffer :&mut String,chars:&mut impl Iterator<Item = char>,function :fn()){
-    buffer.clear();
-    while let Some(&c) = chars.peekable().peek(){
-        function();
-        buffer.push(c);
-        chars.next();
-    }
-    token_list.append_tokens(token);
-    base_state = end_state;
-}
-
-fn switch_state(token_list:&mut TokenList,ch :&char,state :&mut TokenState,buffer :&mut String, chars:&mut impl Iterator<Item = char>){
-    match ch {
-                        '#' =>{
-                            buffer.clear();
-                            chars.next();
-                            *state = TokenState::Header;
-                        }
-                        '['=>{
-                            buffer.clear();
-                            chars.next();
-                            *state = TokenState::Anchor;
-                        }
-                        '*' =>{
-                            chars.next();
-                            *state = TokenState::Inline;
-                        }
-                        '\n'|' '| '.'=>{
-                            chars.next();
-                        }
-                        'a'..='z'|'A'..='Z' =>{
-                            buffer.clear();
-                            *state = TokenState::Text;
-                        }
-
-                        _ =>{
-
-                            token_list.append_tokens(Token::new(TokenTypes::Error, Some(ch.to_string())));
-                            print!("Falied to parse: {:?}\n ",ch);
-                            panic!("Invalid token");
-
-                        }
-                    }
-}

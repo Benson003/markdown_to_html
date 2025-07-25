@@ -13,7 +13,7 @@ I love building **clean, practical backends** with **Go, Python, and Svelte**. S
 - **Languages:** Go, Python (Flask, FastAPI), Dart/Flutter (semi-pro), JavaScript/TypeScript
 - **Frameworks/Libraries:** GORM, Chi, Flask, FastAPI, Svelte (SPA Router, stores)
 - **Likes:** Simplicity, clean architecture, learning low-level details.
-
+_hello_
 
 ---
 

@@ -1,6 +1,3 @@
-use core::option::Option::None;
-use std::collections::HashMap;
-
 #[derive(Debug,Clone)]
 pub struct Token{
     pub token_type: TokenTypes,
@@ -15,24 +12,42 @@ impl Token {
     }
 }
 
-pub enum TokenState{
-    Default,
+
+#[derive(Debug,PartialEq)]
+pub enum CharType{
     Escape,
-    Value,
-    Text,
-    Header,
-    Inline,
-    Anchor,
-    Class,
-    UniqueID,
-    List,
+    WhiteSpace,
+    NewLine,
+    Letter,
+    Digit,
+    Symbol,
+    Special,
+    Unknown,
 }
+
+impl CharType{
+    pub fn classify_char(c: char)->CharType{
+        match c {
+            'a'..='z'| 'A'..='Z' => CharType::Letter,
+            '0'..='9'=> CharType::Digit,
+            '\n'|'\r' => CharType::NewLine,
+            '\t'|' ' => CharType::WhiteSpace,
+            '#'|'['|']'|'('|')' |'<'|'>'|'{'|'}' => CharType::Special,
+            '!'|'@'|'$'|'%'|'^'|'&'|'*'|'-'|'_'|'`'|'\''| '"'|'/'|'|'|',' |'.'=> CharType::Symbol,
+            '\\' => CharType::Escape,
+            _ => CharType::Unknown
+        }
+    }
+
+}
+
+
+
 
 #[derive(Debug,Clone)]
 pub enum TokenTypes {
     Error,
     Escape,
-    Value,
     Text,
     Header,
     Inline,
@@ -42,7 +57,8 @@ pub enum TokenTypes {
     AnchorValueEnd,
     Emphasis,
     OrderedList,
-    MinusToken,
+    Minus,
+    UnderScore,
     Image,
     UniqueIDBegin,
     UniqueIDEnd,
