@@ -1,5 +1,5 @@
-use core::{char,  iter::{Iterator}, option::Option::Some, str::{Chars, Matches}};
-use std::iter::Peekable;
+use core::{iter::{Iterator}, option::Option::Some};
+
 
 use crate::tokenizer::tokens::{ Token, CharType, TokenTypes};
 
@@ -29,6 +29,7 @@ impl  TokenList {
             match CharType::classify_char(ch){
                 CharType::WhiteSpace =>{
                     chars.next();
+                    self.append_tokens(Token::new(TokenTypes::WhiteSpace,None));
                 }
                 CharType::Letter => {
                 buffer.clear();
@@ -128,6 +129,7 @@ impl  TokenList {
 
                 CharType::NewLine => {
                     chars.next();
+                    self.append_tokens(Token::new(TokenTypes::NewLine,None));
                 }
                 CharType::Symbol => {
                     buffer.clear();

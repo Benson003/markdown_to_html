@@ -1,7 +1,7 @@
 #[derive(Debug,Clone)]
 pub struct Token{
-    pub token_type: TokenTypes,
-    pub value: Option<String>,
+    token_type: TokenTypes,
+    value: Option<String>,
 }
 impl Token {
     pub fn new(token_type:TokenTypes,value:Option<String>)-> Token{
@@ -33,7 +33,7 @@ impl CharType{
             '\n'|'\r' => CharType::NewLine,
             '\t'|' ' => CharType::WhiteSpace,
             '#'|'['|']'|'('|')' |'<'|'>'|'{'|'}' => CharType::Special,
-            '!'|'@'|'$'|'%'|'^'|'&'|'*'|'-'|'_'|'`'|'\''| '"'|'/'|'|'|',' |'.'=> CharType::Symbol,
+            '!'|'@'|'$'|'%'|'^'|'&'|'*'|'-'|'_'|'`'|'\''| '"'|'/'|'|'|',' |'.'|':'|'?'=> CharType::Symbol,
             '\\' => CharType::Escape,
             _ => CharType::Unknown
         }
@@ -47,6 +47,8 @@ impl CharType{
 #[derive(Debug,Clone)]
 pub enum TokenTypes {
     Error,
+    NewLine,
+    WhiteSpace,
     Escape,
     Text,
     Header,
