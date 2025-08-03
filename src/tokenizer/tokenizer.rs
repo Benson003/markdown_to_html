@@ -32,21 +32,21 @@ impl  TokenList {
                     self.append_tokens(Token::new(TokenTypes::WhiteSpace,None));
                 }
                 CharType::Letter => {
-                buffer.clear();
-                while let Some(&c) = chars.peek(){
-                    match CharType::classify_char(c){
-                        CharType::Letter=>{
-                             buffer.push(c);
-                             chars.next();
+                    buffer.clear();
+                    while let Some(&c) = chars.peek(){
+                        match CharType::classify_char(c){
+                            CharType::Letter=>{
+                                buffer.push(c);
+                                chars.next();
                             }
                             _=>break
                         }
-                        }
-                let value = std::mem::take(&mut buffer);
-                self.append_tokens(Token::new(TokenTypes::Text, Some(value)));
+                    }
+                    let value = std::mem::take(&mut buffer);
+                    self.append_tokens(Token::new(TokenTypes::Text, Some(value)));
                 }
                 CharType::Special =>{
-                      buffer.clear();
+                    buffer.clear();
                     while let Some(&c) = chars.peek(){
                         if CharType::classify_char(c) != CharType::Special{break;}
                         match c {
@@ -95,36 +95,36 @@ impl  TokenList {
                 }
 
                 CharType::Digit => {
-                        let mut is_ordered_list = false;
-                        let mut num_str = String::new();
+                    let mut is_ordered_list = false;
+                    let mut num_str = String::new();
 
-                        while let Some(&c) = chars.peek() {
-                            match c {
-                                '0'..='9' => {
-                                    num_str.push(c);
-                                    chars.next(); // consume digit
-                                }
-                                '.' => {
-                                    let mut check_iter = chars.clone();
-                                    check_iter.next(); // '.'
-                                    if check_iter.next() == Some(' ') && !num_str.is_empty() {
-                                        // Confirm ordered list
-                                        is_ordered_list = true;
-                                        chars.next(); // consume '.'
-                                    } else {
-                                        break; // not an ordered list
-                                    }
-                                }
-                                _ => break,
+                    while let Some(&c) = chars.peek() {
+                        match c {
+                            '0'..='9' => {
+                                num_str.push(c);
+                                chars.next(); // consume digit
                             }
-                        }
-
-                        if is_ordered_list {
-                            self.append_tokens(Token::new(TokenTypes::OrderedList, Some(num_str)));
-                        } else {
-                            self.append_tokens(Token::new(TokenTypes::Text, Some(num_str)));
+                            '.' => {
+                                let mut check_iter = chars.clone();
+                                check_iter.next(); // '.'
+                                if check_iter.next() == Some(' ') && !num_str.is_empty() {
+                                    // Confirm ordered list
+                                    is_ordered_list = true;
+                                    chars.next(); // consume '.'
+                                } else {
+                                    break; // not an ordered list
+                                }
+                            }
+                            _ => break,
                         }
                     }
+
+                    if is_ordered_list {
+                        self.append_tokens(Token::new(TokenTypes::OrderedList, Some(num_str)));
+                    } else {
+                        self.append_tokens(Token::new(TokenTypes::Text, Some(num_str)));
+                    }
+                }
 
 
                 CharType::NewLine => {
@@ -133,59 +133,59 @@ impl  TokenList {
                 }
                 CharType::Symbol => {
                     buffer.clear();
-                while let Some(&c) = chars.peek(){
-                    if CharType::classify_char(c) != CharType::Symbol{break;}
-                    match c {
-                        '!' => {
-                            chars.next();
-                            self.append_tokens(Token::new(TokenTypes::Image, None));
-                        }
+                    while let Some(&c) = chars.peek(){
+                        if CharType::classify_char(c) != CharType::Symbol{break;}
+                        match c {
+                            '!' => {
+                                chars.next();
+                                self.append_tokens(Token::new(TokenTypes::Image, None));
+                            }
 
-                        '*'=>{
-                            chars.next();
-                            self.append_tokens(Token::new(TokenTypes::Emphasis, None));
-                        }
-                        '`'=> {
-                            chars.next();
-                            self.append_tokens(Token::new(TokenTypes::Inline, None));
-                        }
-                        '-'=>{
-                            chars.next();
-                            self.append_tokens(Token::new(TokenTypes::Minus, None));
-                        }
-                        '_'=>{
-                            chars.next();
-                            self.append_tokens(Token::new(TokenTypes::UnderScore, None));
-                        }
-                        _=> {
-                            chars.next();
-                           buffer.push(c);
-                            let value = std::mem::take(&mut buffer);
-                            self.append_tokens(Token::new(TokenTypes::Text, Some(value)));
-                             break;
+                            '*'=>{
+                                chars.next();
+                                self.append_tokens(Token::new(TokenTypes::Emphasis, None));
+                            }
+                            '`'=> {
+                                chars.next();
+                                self.append_tokens(Token::new(TokenTypes::Inline, None));
+                            }
+                            '-'=>{
+                                chars.next();
+                                self.append_tokens(Token::new(TokenTypes::Minus, None));
+                            }
+                            '_'=>{
+                                chars.next();
+                                self.append_tokens(Token::new(TokenTypes::UnderScore, None));
+                            }
+                            _=> {
+                                chars.next();
+                                buffer.push(c);
+                                let value = std::mem::take(&mut buffer);
+                                self.append_tokens(Token::new(TokenTypes::Text, Some(value)));
+                                break;
                             }
 
 
-                    }
+                        }
 
-                }
+                    }
                 }
                 CharType::Escape =>{
-                   chars.next();
-                   if let Some(ch) = chars.next(){
-                    buffer.push(ch);
-                    let value = std::mem::take(&mut buffer);
-                    self.append_tokens(Token::new(TokenTypes::Escape, Some(value)));
-                   }
+                    chars.next();
+                    if let Some(ch) = chars.next(){
+                        buffer.push(ch);
+                        let value = std::mem::take(&mut buffer);
+                        self.append_tokens(Token::new(TokenTypes::Escape, Some(value)));
+                    }
                 }
                 CharType::Unknown => {
-                buffer.clear();
-                chars.next();
-                buffer.push(ch);
-                let value = std::mem::take(&mut buffer);
-                self.append_tokens(Token::new(TokenTypes::Error, Some(value)));
-                }
+                    buffer.clear();
+                    chars.next();
+                    buffer.push(ch);
+                    let value = std::mem::take(&mut buffer);
+                    self.append_tokens(Token::new(TokenTypes::Error, Some(value)));
                 }
             }
         }
     }
+}

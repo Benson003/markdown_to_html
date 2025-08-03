@@ -1,7 +1,7 @@
 #[derive(Debug,Clone)]
 pub struct Token{
-    token_type: TokenTypes,
-    value: Option<String>,
+    pub token_type: TokenTypes,
+    pub value: Option<String>,
 }
 impl Token {
     pub fn new(token_type:TokenTypes,value:Option<String>)-> Token{
@@ -11,9 +11,11 @@ impl Token {
         }
     }
 
-    pub fn print_token(&mut self){
-        println!("<Token token_type={0} value={1}",self.token_type,self.value);
+    pub fn print(&self){
+        print!("<Token type={:?} value={:?}> ",self.token_type,self.value)
     }
+
+
 }
 
 

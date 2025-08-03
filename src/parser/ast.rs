@@ -1,5 +1,3 @@
-use std::cell::RefCell;
-
 #[derive(Debug)]
 pub enum NodeValue{
     Text(String),
@@ -7,29 +5,31 @@ pub enum NodeValue{
     None
 }
 
-#[derive(Debug)]
+
 pub struct ASTNode{
     node_type: NodeType,
     value: NodeValue,
-    parent: Option<ASTNode>,
-    children: Vec<Option<ASTNode>>,
+    parent: Option<Box<ASTNode>>,
+    children: Option<Vec<Box<ASTNode>>>,
     order: usize,
 }
 
 impl ASTNode {
-    pub fn new(node_type: NodeType, value: NodeValue,parent: Option<ASTNode>) -> ASTNode {
+    pub fn new(node_type: NodeType, value: NodeValue,parent:ASTNode) -> ASTNode {
         ASTNode{
             node_type:node_type,
             value: value,
-            parent: parent,
-            children: vec![],
-            order: 1
+            parent: Some(Box::new(parent)),
+            children:Some(vec![]) ,
+            order: 0
         }
     }
 
     pub fn append_node(&mut self,ast_node:ASTNode){
-        self.children.append(ast_node);
-        self.order = self.children.len() + 1;
+        if let Some(children)=&mut self.children{
+            children.push(Box::new(ast_node));
+            self.order = children.len();
+        } 
     }
 }
 
@@ -58,7 +58,6 @@ pub enum State{
     Default,
     Header,
     Text,
-    Value,
     Bold,
     Highlight,
     CodeBlock,
